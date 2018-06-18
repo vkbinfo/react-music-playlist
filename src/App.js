@@ -9,35 +9,35 @@ let fakeServerData = {
   user : {
     name : "David",
     playlists : [
-      { name: "Pink Floyd's Best",
-        songs: [
-          {name: "Shine on crazy Diamond", length: 345},
-          {name: "Wish You were here", length: 800},
-          {name: "Us and Them", length: 900}
-        ]
-      },
-      {name: "Pink Floyd's Best",
-      songs: [
-        {name: "Shine on crazy Diamond", length: 345},
-        {name: "Wish You were here", length: 800},
-        {name: "Us and Them", length: 900}
-      ]
-      },
-      {name: "Pink Floyd's Best",
-      songs: [
-        {name: "Shine on crazy Diamond", length: 345},
-        {name: "Wish You were here", length: 800},
-        {name: "Us and Them", length: 900}
-      ]
-      },
-      {name: "Pink Floyd's Best",
-      songs: [
-        {name: "Shine on crazy Diamond", length: 345},
-        {name: "Wish You were here", length: 800},
-        {name: "Us and Them", length: 900}
-      ]
-    }
-    ]
+                { name: "Pink Floyd's Best",
+                  songs: [
+                    {name: "Shine on crazy Diamond", length: 345},
+                    {name: "Wish You were here", length: 800},
+                    {name: "Us and Them", length: 900}
+                  ]
+                },
+                {name: "The Endless River",
+                songs: [
+                  {name: "Wake Up", length: 345},
+                  {name: "Wish You were here", length: 800},
+                  {name: "Us and Them", length: 900}
+                ]
+                },
+                {name: "Wish you were here",
+                songs: [
+                  {name: "Time", length: 345},
+                  {name: "Wish You were here", length: 800},
+                  {name: "Us and Them", length: 900}
+                ]
+                },
+                {name: "The dark side of the Moon.",
+                songs: [
+                  {name: "High Feels", length: 345},
+                  {name: "Wish You were here", length: 800},
+                  {name: "Us and Them", length: 900}
+                ]
+              }
+            ]
   }
 }
 class PlaylistCounter extends Component {
@@ -59,7 +59,7 @@ class HoursCounter extends Component {
     {return sum + song.length;}, 0);
     return (
       <div style={{...colorSetting, width: "40%", display: 'inline-block'}}>
-        <h2>{Math.round(totalDuaration/3600)} Hours</h2>
+        <h2>{Math.round(totalDuaration/60)} Minutes</h2>
       </div>
     );
   }
@@ -70,8 +70,8 @@ class Filter extends Component {
     return (
       <div style = {colorSetting}>
       <img/>
-      <input type = "text" />
-      <button style = {{display:"inline-block"}}> Search </button>
+      <input type = "text" onKeyUp = {
+        event =>this.props.onTextChange(event.target.value)}/>
       </div>
     );
   }
@@ -82,11 +82,9 @@ class Playlist extends Component {
     return (
       <div style = {{...colorSetting, width: "20%", display: "inline-block"}}>
       <img/>
-      <h3>Playlist Name</h3>
+      <h3>{this.props.playlist.name}</h3>
       <ul style = { {float: "left"} }>
-        <li>Song 1</li>
-        <li>Song 2</li>
-        <li>Song 3</li>
+      {this.props.playlist.songs.map(song => <li>{song.name}</li>)}
       </ul>
       </div>
     );
@@ -96,7 +94,10 @@ class Playlist extends Component {
 class App extends Component {
   constructor(props){
     super();
-    this.state = {serverData: {}};
+    this.state = {
+      serverData: {},
+      filter :''
+    };
   }
 
   componentDidMount(){
@@ -107,15 +108,22 @@ class App extends Component {
     
   }
   render() {
+    let playListToRender = this.state.serverData.user ? 
+    this.state.serverData.user.playlists.filter( playlist =>
+    playlist.name.includes(this.state.filter)) : []
+
     return (
       <div className = "App">
       {this.state.serverData.user ?
       <div>
       <h1 style = {{...colorSetting, fontSize : '54px'}}> {this.state.serverData.user.name}'s Playlist </h1>
-      <PlaylistCounter playlists = {this.state.serverData.user.playlists} /> 
-      <HoursCounter playlists = {this.state.serverData.user.playlists} />
-      <Filter />
-      <Playlist /> <Playlist /> <Playlist /> <Playlist />
+      <PlaylistCounter playlists = {playListToRender} /> 
+      <HoursCounter playlists = {playListToRender} />
+      <Filter onTextChange={
+        filterString => 
+        this.setState({filter:filterString})
+        }/>
+      { playListToRender.map(playlist => <Playlist playlist = {playlist} />)}
       </div> : <h2> Loading... </h2>}
       </div>
     );
