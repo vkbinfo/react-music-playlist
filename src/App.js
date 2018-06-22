@@ -60,20 +60,15 @@ class HoursCounter extends Component {
   componentWillReceiveProps(nextProps){
     // updated props will come here.
     this.setState({playlists:nextProps.playlists})
-    console.log("new Props");
-    console.log(nextProps);
     this.render()
   }
 
   render(){
-    console.log("is it right", this.state.playlists)
     let songsToLoad = this.state.playlists
     ?(this.state.playlists.reduce((allPlaylist, playlist) =>{
-      console.log("great", playlist)
       return allPlaylist.concat(playlist.songs)}
-    ,[]))
+      ,[]))
     :[]
-    console.log("songs to load",songsToLoad)
     let totalDuaration = songsToLoad.reduce((sum, song) => sum + song.length, 0);
 
     return (
@@ -103,7 +98,6 @@ class Playlist extends Component {
       <img src={this.props.playlist.imageURL} style={{width:"120px"}}/>
       <h3>{this.props.playlist.name}</h3>
       <ul style = { {float: "left"} }>
-      {console.log("hata savan ki ghata",this.props.playlist)}
       {this.props.playlist.songs.map(song => <li>{song.name}</li>)}
       </ul>
       </div>
@@ -120,49 +114,46 @@ class App extends Component {
     };
   }
 
-  async getSongs(tracksInfo, accessToken){
-    let songList = []
-     await  fetch(tracksInfo.href,{headers: {Authorization: 'Bearer ' + accessToken}})
+   getSongs(tracksInfo, accessToken){
+    return fetch(tracksInfo.href,{headers: {Authorization: 'Bearer ' + accessToken}})
                           .then(  response => response.json())
-                          .then(data => data.items.forEach(track =>{
+                          .then(data => data.items.map(track =>{
                                                           let singleTrackInfo = {name:track.track.name, length:330}
-                                                        songList.push(singleTrackInfo);
+                                                          return singleTrackInfo;
                                                           })
                                 )                        
-    return songList;
   }
 
   componentDidMount(){
     let params = (new URL(document.location)).searchParams;
     let accessToken = params.get("access_token");
-    if (accessToken) {
-        fetch("https://api.spotify.com/v1/me", {headers: {Authorization: 'Bearer ' + accessToken }})
-        .then(  response => response.json())
-        .then(data=>{
-                        this.setState({user:{name: data.display_name}})
-                      })
+    if (!accessToken){
+      return 1;
+    }
+
+    //getting user names
+    fetch("https://api.spotify.com/v1/me", {headers: {Authorization: 'Bearer ' + accessToken }})
+    .then(  response => response.json())
+    .then(data=>{ 
+                  this.setState({user:{name: data.display_name}})
+                  })
   
-        let playlists = []
-        // let's get playlist of user
+    
+     //let's get playlists of user
       fetch("https://api.spotify.com/v1/me/playlists", {headers: {Authorization: 'Bearer ' + accessToken}})
       .then( response => response.json() )
-      .then( data=>data.items.forEach( playlist => { let playlistDetail ={name: '', songs:[]};
-                                                      console.log(playlist);
+      .then( data=>this.setState({playlists: data.items.map( playlist => { 
+                                                      let playlistDetail={}
                                                       playlistDetail['name'] = playlist.name;
                                                       playlistDetail['imageURL']= playlist.images[0].url
-                                                      this.getSongs(playlist.tracks,accessToken).then(data => playlistDetail.songs = data)
-                                                      playlists.push(playlistDetail)
+                                                      this.getSongs(playlist.tracks,accessToken).then(data=>playlistDetail['songs']=data)
+                                                      return playlistDetail
                                                     } 
                                       )
+                                  })
             )
-      .then(_=>{
-                console.log("printing playlist", playlists)
-                this.setState({playlists: playlists});
-                console.log("printing state");
-                console.log(this.state);
-              }       
-            )
-    }
+   
+    
   }
 
   render() {
